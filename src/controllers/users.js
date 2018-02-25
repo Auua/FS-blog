@@ -30,7 +30,7 @@ usersRouter.post('/', async (request, response) => {
       username: body.username,
       name: body.name,
       passwordHash: passwordHash,
-      adult: body.adult,
+      adult: body.adult === undefined ? true : body.likes,
       blogs: []
     })
 
