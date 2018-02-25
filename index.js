@@ -9,6 +9,7 @@ const blogRouter = require('./src/controllers/router')
 const middleware = require('./src/utils/middleware')
 const config = require('./src/utils/config')
 const usersRouter = require('./src/controllers/users')
+const loginRouter = require('./src/controllers/login')
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -25,6 +26,7 @@ mongoose
 
 app.use('/api/blogs', blogRouter)
 app.use('/api/users', usersRouter)
+app.use('/api/login', loginRouter)
 
 app.use(middleware.error)
 
