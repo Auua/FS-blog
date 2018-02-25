@@ -13,7 +13,9 @@ const loginRouter = require('./src/controllers/login')
 
 app.use(cors())
 app.use(bodyParser.json())
+app.use(middleware.tokenExtractor)
 app.use(middleware.logger)
+
 
 mongoose
   .connect(config.mongoUrl)

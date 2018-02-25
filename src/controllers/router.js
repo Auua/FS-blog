@@ -11,23 +11,12 @@ blogRouter.get('/', async (request, response) => {
   response.json(blogs.map(Blog.format))
 })
 
-
-const getTokenFrom = (request) => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
-
-
 blogRouter.post('/', async (request, response) => {
   const body = request.body
   try {
-    const token = getTokenFrom(request)
-    const decodedToken = jwt.verify(token, process.env.SECRET)
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
 
-    if (!token || !decodedToken.id) {
+    if (!decodedToken.id) {
       return response.status(401).json({ error: 'token missing or invalid' })
     }
 
@@ -80,9 +69,38 @@ blogRouter.get('/:id', async (request, response) => {
 
 blogRouter.delete('/:id', async (request, response) => {
   try {
-    await Blog.findByIdAndRemove(request.params.id)
 
-    response.status(204).end()
+    const blog = await Blog.findById(request.params.id)
+
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    const user = await User.findById(decodedToken.id)
+
+    if (blog.user.toString() ===  user._id.toString()) {
+      await Blog.findByIdAndRemove(request.params.id)
+      response.status(204).end()
+    } else {
+      response.status(400).send({ error: 'Only creator can remove post' })
+    }
+
+  } catch (exception) {
+    console.log(exception)
+    response.status(400).send({ error: 'malformatted id' })
+  }
+})
+
+blogRouter.put('/:id', async (request, response) => {
+  const body = request.body
+
+  try {
+    const blog = {}
+    if (body.title) blog.title = body.title
+    if (body.author) blog.author = body.author
+    if (body.url) blog.url = body.url
+    if (body.likes) blog.likes = body.likes
+
+    const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog,  { new: true } )
+    console.log(updatedBlog)
+    response.json(Blog.format(updatedBlog))
   } catch (exception) {
     console.log(exception)
     response.status(400).send({ error: 'malformatted id' })
